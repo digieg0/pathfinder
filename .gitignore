@@ -65,3 +65,4 @@ build-*/
 
 # Local reference projects (not part of the Pathfinder mod)
 /examples/
+/logs/

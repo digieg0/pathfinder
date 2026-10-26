@@ -1,5 +1,6 @@
 #include "Menu.hpp"
 #include "../gameplay/RunStats.hpp"
+#include "../diagnostics/Logger.hpp"
 
 #include <Geode/Geode.hpp>
 #include <imgui-cocos.hpp>
@@ -14,12 +15,20 @@ void installKeybindListeners() {
 			data.action != geode::KeyboardInputData::Action::Repeat) {
 			return geode::ListenerResult::Propagate;
 		}
+		if (data.action == geode::KeyboardInputData::Action::Press) {
+			PathfinderDiagnostics::write(fmt::format(
+				"keyboard press: code={} modifiers={}",
+				static_cast<int>(data.key),
+				static_cast<int>(data.modifiers)
+			));
+		}
 		if (s_waitingForKey) {
 			if (data.action == geode::KeyboardInputData::Action::Repeat) {
 				return geode::ListenerResult::Stop;
 			}
 			if (data.key == cocos2d::KEY_Escape) {
 				s_waitingForKey = false;
+				PathfinderDiagnostics::write("shortcut capture cancelled with Escape");
 				return geode::ListenerResult::Stop;
 			}
 
@@ -28,6 +37,12 @@ void installKeybindListeners() {
 				{ geode::Keybind(data.key, data.modifiers) }
 			);
 			s_waitingForKey = false;
+			PathfinderDiagnostics::write(fmt::format(
+				"shortcut captured: {} key={} modifiers={}",
+				geode::Keybind(data.key, data.modifiers).toString(),
+				static_cast<int>(data.key),
+				static_cast<int>(data.modifiers)
+			));
 			return geode::ListenerResult::Stop;
 		}
 
@@ -40,6 +55,11 @@ void installKeybindListeners() {
 					bind.key == pressed.key &&
 					bind.modifiers == geode::KeyboardModifier::None;
 				if (bind == pressed || legacyAltBind) {
+					PathfinderDiagnostics::write(fmt::format(
+						"shortcut matched: {} key={} modifiers={}; menu {} -> {}",
+						bind.toString(), static_cast<int>(bind.key), static_cast<int>(bind.modifiers),
+						s_isOpen ? "open" : "closed", s_isOpen ? "closed" : "open"
+					));
 					s_isOpen = !s_isOpen;
 					return geode::ListenerResult::Stop;
 				}
@@ -51,11 +71,22 @@ void installKeybindListeners() {
 }
 
 void PathfinderMenu::install() {
+	PathfinderDiagnostics::write("PathfinderMenu::install entered");
 	installKeybindListeners();
-	ImGuiCocos::get().draw([] {
+	PathfinderDiagnostics::write("KeyboardInputEvent listener installed");
+	ImGuiCocos::get().setup([] {
+		PathfinderDiagnostics::write("ImGuiCocos setup callback entered");
+		ImGui::GetIO().IniFilename = nullptr;
+	}).draw([] {
+		static bool firstDraw = true;
+		if (firstDraw) {
+			PathfinderDiagnostics::write("ImGuiCocos draw callback entered");
+			firstDraw = false;
+		}
 		if (!s_isOpen) return;
 
 		ImGui::SetNextWindowSize(ImVec2(480.f, 360.f), ImGuiCond_FirstUseEver);
+		bool wasOpen = s_isOpen;
 		if (ImGui::Begin("Pathfinder", &s_isOpen, ImGuiWindowFlags_NoCollapse)) {
 			ImGui::TextUnformatted("Geometry Dash mod workspace");
 			ImGui::Separator();
@@ -86,6 +117,7 @@ void PathfinderMenu::install() {
 				ImGui::Button("Press a key... (Esc cancels)");
 			} else if (ImGui::Button("Change shortcut")) {
 				s_waitingForKey = true;
+				PathfinderDiagnostics::write("shortcut capture started from menu");
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Reset to Alt")) {
@@ -100,7 +132,11 @@ void PathfinderMenu::install() {
 			ImGui::TextDisabled("UI scaffold · no gameplay changes");
 		}
 		ImGui::End();
+		if (wasOpen && !s_isOpen) {
+			PathfinderDiagnostics::write("ImGui window closed with title bar X");
+		}
 	});
+	PathfinderDiagnostics::write("ImGuiCocos setup/draw callbacks registered");
 }
 
 void PathfinderMenu::toggle() {
