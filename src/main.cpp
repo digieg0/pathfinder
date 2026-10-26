@@ -15,24 +15,6 @@ class $modify(PathfinderMenuLayer, MenuLayer) {
 			imguiReady = true;
 		}
 
-		auto menu = this->getChildByID("bottom-menu");
-		if (!menu || menu->getChildByID("pathfinder-open"_spr)) return true;
-
-		auto sprite = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
-		if (!sprite) sprite = ButtonSprite::create("PF");
-
-		auto button = CCMenuItemSpriteExtra::create(
-			sprite,
-			this,
-			menu_selector(PathfinderMenuLayer::onPathfinderButton)
-		);
-		button->setID("pathfinder-open"_spr);
-		menu->addChild(button);
-		menu->updateLayout();
 		return true;
-	}
-
-	void onPathfinderButton(CCObject*) {
-		PathfinderMenu::toggle();
 	}
 };

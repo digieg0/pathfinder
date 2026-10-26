@@ -9,26 +9,54 @@ bool s_isOpen = false;
 bool s_waitingForKey = false;
 
 void installKeybindListeners() {
-	geode::listenForKeybindSettingPresses("menu-toggle", [](geode::Keybind const&, bool down, bool repeat, double) {
-		if (down && !repeat) s_isOpen = !s_isOpen;
-	});
-
 	geode::KeyboardInputEvent().listen([](geode::KeyboardInputData& data) {
-		if (!s_waitingForKey || data.action != geode::KeyboardInputData::Action::Press) {
+		if (data.action != geode::KeyboardInputData::Action::Press) {
 			return geode::ListenerResult::Propagate;
 		}
 
-		if (data.key == cocos2d::KEY_Escape) {
+		auto modifiers = data.modifiers;
+		switch (data.key) {
+			case cocos2d::KEY_LeftMenu:
+			case cocos2d::KEY_RightMenu:
+				modifiers &= ~geode::KeyboardModifier::Alt;
+				break;
+			case cocos2d::KEY_LeftShift:
+			case cocos2d::KEY_RightShift:
+				modifiers &= ~geode::KeyboardModifier::Shift;
+				break;
+			case cocos2d::KEY_LeftControl:
+			case cocos2d::KEY_RightContol:
+				modifiers &= ~geode::KeyboardModifier::Control;
+				break;
+			case cocos2d::KEY_LeftWindowsKey:
+			case cocos2d::KEY_RightWindowsKey:
+				modifiers &= ~geode::KeyboardModifier::Super;
+				break;
+			default:
+				break;
+		}
+
+		if (s_waitingForKey) {
+			if (data.key == cocos2d::KEY_Escape) {
+				s_waitingForKey = false;
+				return geode::ListenerResult::Stop;
+			}
+
+			geode::Mod::get()->setSettingValue<std::vector<geode::Keybind>>(
+				"menu-toggle",
+				{ geode::Keybind(data.key, modifiers) }
+			);
 			s_waitingForKey = false;
 			return geode::ListenerResult::Stop;
 		}
 
-		geode::Mod::get()->setSettingValue<std::vector<geode::Keybind>>(
-			"menu-toggle",
-			{ geode::Keybind(data.key, data.modifiers) }
-		);
-		s_waitingForKey = false;
-		return geode::ListenerResult::Stop;
+		for (auto const& keybind : geode::Mod::get()->getSettingValue<std::vector<geode::Keybind>>("menu-toggle")) {
+			if (keybind.key == data.key && keybind.modifiers == modifiers) {
+				s_isOpen = !s_isOpen;
+				return geode::ListenerResult::Stop;
+			}
+		}
+		return geode::ListenerResult::Propagate;
 	}).leak();
 }
 }
