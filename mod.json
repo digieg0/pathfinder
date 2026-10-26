@@ -1,0 +1,18 @@
+{
+	"geode": "5.8.2",
+	"gd": {
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
+	},
+	"id": "digieg0.pathfinder",
+	"name": "Pathfinder",
+	"version": "v0.1.0",
+	"developer": "digieg0",
+	"description": "A Geometry Dash mod with an ImGui menu.",
+	"repository": "https://github.com/digieg0/pathfinder",
+	"links": {
+		"source": "https://github.com/digieg0/pathfinder"
+	}
+}
