@@ -10,7 +10,7 @@ bool s_waitingForKey = false;
 
 void installKeybindListeners() {
 	geode::KeyboardInputEvent().listen([](geode::KeyboardInputData& data) {
-		if (data.action != geode::KeyboardInputData::Action::Press) {
+		if (!s_waitingForKey || data.action != geode::KeyboardInputData::Action::Press) {
 			return geode::ListenerResult::Propagate;
 		}
 
@@ -36,27 +36,17 @@ void installKeybindListeners() {
 				break;
 		}
 
-		if (s_waitingForKey) {
-			if (data.key == cocos2d::KEY_Escape) {
-				s_waitingForKey = false;
-				return geode::ListenerResult::Stop;
-			}
-
-			geode::Mod::get()->setSettingValue<std::vector<geode::Keybind>>(
-				"menu-toggle",
-				{ geode::Keybind(data.key, modifiers) }
-			);
+		if (data.key == cocos2d::KEY_Escape) {
 			s_waitingForKey = false;
 			return geode::ListenerResult::Stop;
 		}
 
-		for (auto const& keybind : geode::Mod::get()->getSettingValue<std::vector<geode::Keybind>>("menu-toggle")) {
-			if (keybind.key == data.key && keybind.modifiers == modifiers) {
-				s_isOpen = !s_isOpen;
-				return geode::ListenerResult::Stop;
-			}
-		}
-		return geode::ListenerResult::Propagate;
+		geode::Mod::get()->setSettingValue<std::vector<geode::Keybind>>(
+			"menu-toggle",
+			{ geode::Keybind(data.key, modifiers) }
+		);
+		s_waitingForKey = false;
+		return geode::ListenerResult::Stop;
 	}).leak();
 }
 }
