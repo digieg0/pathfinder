@@ -4,7 +4,7 @@ A Geometry Dash Geode mod with an ImGui menu scaffold.
 
 ## Development
 
-The mod adds a button to the main menu. Select it to open the Pathfinder ImGui window. The current window is a UI scaffold and does not change gameplay.
+Open or close the Pathfinder ImGui window with either Alt key or the button on the Geometry Dash main menu. Use **Change shortcut** inside the window to assign another key; press Escape to cancel. **Reset to Alt** restores both Alt keys. The current window is a UI scaffold and does not change gameplay.
 
 ### Build
 
