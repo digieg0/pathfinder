@@ -1,4 +1,5 @@
 #include "Menu.hpp"
+#include "../gameplay/RunStats.hpp"
 
 #include <Geode/Geode.hpp>
 #include <imgui-cocos.hpp>
@@ -37,12 +38,28 @@ void PathfinderMenu::install() {
 	ImGuiCocos::get().draw([] {
 		if (!s_isOpen) return;
 
-		ImGui::SetNextWindowSize(ImVec2(430.f, 250.f), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(480.f, 360.f), ImGuiCond_FirstUseEver);
 		if (ImGui::Begin("Pathfinder", &s_isOpen, ImGuiWindowFlags_NoCollapse)) {
 			ImGui::TextUnformatted("Geometry Dash mod workspace");
 			ImGui::Separator();
 			ImGui::Spacing();
 			ImGui::TextWrapped("The ImGui interface is ready. Mod features can be added here.");
+			ImGui::Spacing();
+			if (PathfinderRunStats::hasActiveAttempt()) {
+				ImGui::Text("Current frame: %d", PathfinderRunStats::currentFrame());
+			} else {
+				ImGui::TextDisabled("Current frame: —");
+			}
+			if (PathfinderRunStats::hasPreviousDeath()) {
+				ImGui::Text("Previous attempt death frame: %d", PathfinderRunStats::previousDeathFrame());
+			} else {
+				ImGui::TextDisabled("Previous attempt death frame: —");
+			}
+			if (ImGui::Button("Test jump")) {
+				if (!PathfinderRunStats::testJump()) {
+					geode::log::info("Test jump is available during an active, unpaused attempt.");
+				}
+			}
 			ImGui::Spacing();
 
 			auto keybinds = geode::Mod::get()->getSettingValue<std::vector<geode::Keybind>>("menu-toggle");
