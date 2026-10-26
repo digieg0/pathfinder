@@ -15,14 +15,13 @@
 	"links": {
 		"source": "https://github.com/digieg0/pathfinder"
 	},
-	"settings": [
-		{
-			"id": "menu-toggle",
+	"settings": {
+		"menu-toggle": {
 			"type": "keybind",
 			"name": "Toggle Pathfinder menu",
 			"description": "The menu hotkey can also be changed from inside the Pathfinder window.",
 			"default": ["LeftMenu", "RightMenu"],
 			"category": "universal"
 		}
-	]
+	}
 }
