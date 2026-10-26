@@ -10,43 +10,42 @@ bool s_waitingForKey = false;
 
 void installKeybindListeners() {
 	geode::KeyboardInputEvent().listen([](geode::KeyboardInputData& data) {
-		if (!s_waitingForKey || data.action != geode::KeyboardInputData::Action::Press) {
+		if (data.action != geode::KeyboardInputData::Action::Press &&
+			data.action != geode::KeyboardInputData::Action::Repeat) {
 			return geode::ListenerResult::Propagate;
 		}
+		if (s_waitingForKey) {
+			if (data.action == geode::KeyboardInputData::Action::Repeat) {
+				return geode::ListenerResult::Stop;
+			}
+			if (data.key == cocos2d::KEY_Escape) {
+				s_waitingForKey = false;
+				return geode::ListenerResult::Stop;
+			}
 
-		auto modifiers = data.modifiers;
-		switch (data.key) {
-			case cocos2d::KEY_LeftMenu:
-			case cocos2d::KEY_RightMenu:
-				modifiers &= ~geode::KeyboardModifier::Alt;
-				break;
-			case cocos2d::KEY_LeftShift:
-			case cocos2d::KEY_RightShift:
-				modifiers &= ~geode::KeyboardModifier::Shift;
-				break;
-			case cocos2d::KEY_LeftControl:
-			case cocos2d::KEY_RightContol:
-				modifiers &= ~geode::KeyboardModifier::Control;
-				break;
-			case cocos2d::KEY_LeftWindowsKey:
-			case cocos2d::KEY_RightWindowsKey:
-				modifiers &= ~geode::KeyboardModifier::Super;
-				break;
-			default:
-				break;
-		}
-
-		if (data.key == cocos2d::KEY_Escape) {
+			geode::Mod::get()->setSettingValue<std::vector<geode::Keybind>>(
+				"menu-toggle",
+				{ geode::Keybind(data.key, data.modifiers) }
+			);
 			s_waitingForKey = false;
 			return geode::ListenerResult::Stop;
 		}
 
-		geode::Mod::get()->setSettingValue<std::vector<geode::Keybind>>(
-			"menu-toggle",
-			{ geode::Keybind(data.key, modifiers) }
-		);
-		s_waitingForKey = false;
-		return geode::ListenerResult::Stop;
+		if (data.action == geode::KeyboardInputData::Action::Press) {
+			geode::Keybind const pressed(data.key, data.modifiers);
+			for (auto const& bind : geode::Mod::get()->getSettingValue<std::vector<geode::Keybind>>("menu-toggle")) {
+				bool legacyAltBind =
+					(pressed.key == cocos2d::KEY_LeftMenu || pressed.key == cocos2d::KEY_RightMenu) &&
+					pressed.modifiers == geode::KeyboardModifier::Alt &&
+					bind.key == pressed.key &&
+					bind.modifiers == geode::KeyboardModifier::None;
+				if (bind == pressed || legacyAltBind) {
+					s_isOpen = !s_isOpen;
+					return geode::ListenerResult::Stop;
+				}
+			}
+		}
+		return geode::ListenerResult::Propagate;
 	}).leak();
 }
 }
@@ -92,8 +91,8 @@ void PathfinderMenu::install() {
 			if (ImGui::Button("Reset to Alt")) {
 				geode::Mod::get()->setSettingValue<std::vector<geode::Keybind>>(
 					"menu-toggle",
-					{ geode::Keybind(cocos2d::KEY_LeftMenu, geode::KeyboardModifier::None),
-					  geode::Keybind(cocos2d::KEY_RightMenu, geode::KeyboardModifier::None) }
+					{ geode::Keybind(cocos2d::KEY_LeftMenu, geode::KeyboardModifier::Alt),
+					  geode::Keybind(cocos2d::KEY_RightMenu, geode::KeyboardModifier::Alt) }
 				);
 				s_waitingForKey = false;
 			}

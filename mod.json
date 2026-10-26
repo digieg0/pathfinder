@@ -20,7 +20,7 @@
 			"type": "keybind",
 			"name": "Toggle Pathfinder menu",
 			"description": "The menu hotkey can also be changed from inside the Pathfinder window.",
-			"default": ["LeftMenu", "RightMenu"],
+			"default": ["Alt+LeftMenu", "Alt+RightMenu"],
 			"category": "universal"
 		}
 	}
